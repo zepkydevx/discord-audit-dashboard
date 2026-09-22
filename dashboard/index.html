@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Audit Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    :root {
+      --bg: #10131a;
+      --surface: #1a1e28;
+      --surface-alt: #20242f;
+      --border: #2a2f3c;
+      --text: #e7e9ee;
+      --text-muted: #8890a3;
+      --accent-structural: #6e93bd;
+      --accent-medium: #d3a24a;
+      --accent-high: #c15c5c;
+      --accent-ok: #5fae84;
+      --sans: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      --mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      line-height: 1.5;
+    }
+
+    .console {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 24px 20px 60px;
+    }
+
+    .console-bar {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+
+    .console-bar h1 {
+      font-size: 1.35rem;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .console-bar p {
+      margin: 4px 0 0;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .connect-form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .connect-form input {
+      flex: 1 1 180px;
+      min-width: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      padding: 9px 10px;
+      border-radius: 4px;
+    }
+
+    .connect-form input:focus-visible,
+    .connect-form button:focus-visible {
+      outline: 2px solid var(--accent-structural);
+      outline-offset: 1px;
+    }
+
+    .connect-form button {
+      background: var(--accent-structural);
+      color: #0b0e14;
+      border: none;
+      font-family: var(--sans);
+      font-weight: 600;
+      font-size: 0.9rem;
+      padding: 9px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .connect-form button:hover {
+      filter: brightness(1.1);
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      width: fit-content;
+    }
+
+    .status::before {
+      content: '';
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--text-muted);
+    }
+
+    .status[data-state='connected'] {
+      color: var(--accent-ok);
+      border-color: var(--accent-ok);
+    }
+    .status[data-state='connected']::before {
+      background: var(--accent-ok);
+    }
+
+    .status[data-state='error'] {
+      color: var(--accent-high);
+      border-color: var(--accent-high);
+    }
+    .status[data-state='error']::before {
+      background: var(--accent-high);
+    }
+
+    .event-log {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .event-row {
+      display: flex;
+      gap: 12px;
+      background: var(--surface);
+      border-left: 3px solid var(--accent-structural);
+      border-radius: 4px;
+      padding: 10px 12px;
+    }
+
+    .event-row[data-severity='medium'] {
+      border-left-color: var(--accent-medium);
+    }
+    .event-row[data-severity='high'] {
+      border-left-color: var(--accent-high);
+    }
+
+    .event-row .time {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      padding-top: 1px;
+    }
+
+    .event-row .body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .event-row .headline {
+      font-size: 0.9rem;
+    }
+
+    .event-row .headline strong {
+      font-weight: 600;
+    }
+
+    .event-row .reason {
+      margin-top: 2px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .empty-state {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      padding: 18px 4px;
+    }
+
+    @keyframes event-enter {
+      from {
+        opacity: 0;
+        transform: translateY(-4px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .event-row.is-new {
+      animation: event-enter 220ms ease-out;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .event-row.is-new {
+        animation: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="console">
+    <div class="console-bar">
+      <div>
+        <h1>Audit Console</h1>
+        <p>Live feed of moderation events, streamed straight from the bot.</p>
+      </div>
+      <form class="connect-form" id="connect-form">
+        <input
+          id="ws-url"
+          type="text"
+          value="ws://localhost:8080"
+          aria-label="WebSocket URL"
+          autocomplete="off"
+        />
+        <input
+          id="ws-token"
+          type="password"
+          placeholder="Dashboard token"
+          aria-label="Dashboard token"
+          autocomplete="off"
+        />
+        <button type="submit">Connect</button>
+      </form>
+      <span class="status" id="status" data-state="disconnected">Disconnected</span>
+    </div>
+
+    <ul class="event-log" id="event-log">
+      <li class="empty-state" id="empty-state">No events yet — connect to start watching.</li>
+    </ul>
+  </div>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

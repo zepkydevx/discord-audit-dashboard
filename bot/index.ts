@@ -1,3 +1,5 @@
+import { registerAuditListener } from './auditListener.js';
+import { AuditBroadcaster } from './broadcaster.js';
 import { createClient } from './client.js';
 import { ConfigError, loadSettings } from './config.js';
 
@@ -18,7 +20,11 @@ async function main(): Promise<void> {
     throw error;
   }
 
+  const broadcaster = new AuditBroadcaster(settings.wsPort, settings.dashboardToken);
+  log('INFO', `WebSocket server listening on port ${settings.wsPort}`);
+
   const client = createClient();
+  registerAuditListener(client, broadcaster);
 
   client.once('clientReady', (readyClient) => {
     log(
